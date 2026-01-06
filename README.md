@@ -180,4 +180,4 @@ If you use this code in your research, please cite:
 
 ## Acknowledgments
 
-Based on the knowledge distillation approach described at [HOWAI](https://howai.com/fine-tuning-knowledge-distillation-llm.html).
+Based on the knowledge distillation approach described at [HOWAI](https://www.howai.cloud/fine-tuning-knowledge-distillation-llm.html).
