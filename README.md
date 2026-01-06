@@ -2,7 +2,7 @@
 
 A production-ready framework for distilling knowledge from large teacher models (GPT-4, Claude) into smaller, efficient student models using synthetic data generation and parameter-efficient fine-tuning (LoRA/QLoRA).
 
-Complete implementation of the knowledge distillation approach described in the HOWAI article ["Fine-Tuning LLMs with a Bigger Teacher"](https://howai.com/fine-tuning-knowledge-distillation-llm.html).
+Complete implementation of the knowledge distillation approach described in the HOWAI article ["Fine-Tuning LLMs with a Bigger Teacher"](https://www.howai.cloud/fine-tuning-knowledge-distillation-llm.html).
 
 ## Overview
 
@@ -63,7 +63,7 @@ code/
 
 1. Clone the repository:
 ```bash
-git clone https://github.cloud/LorenzoMascia/llm-distillery.git
+git clone https://github.com/LorenzoMascia/llm-distillery.git
 cd llm-distillery
 ```
 
