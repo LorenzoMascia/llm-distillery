@@ -1,0 +1,124 @@
+# Prompt Configuration for Synthetic Data Generation
+# Domain: Network Automation and Configuration Management
+
+tasks:
+  - name: "cli_parsing"
+    description: "Parse CLI output and extract structured information"
+    instruction: "Parse the following network device CLI output and extract the interface state information into a structured JSON format."
+    system_message: "You are an expert network engineer specializing in parsing and structuring network device outputs. Always respond with valid JSON."
+    output_schema:
+      type: "object"
+      required: ["interface", "admin_state", "oper_state"]
+      properties:
+        interface:
+          type: "string"
+        admin_state:
+          type: "string"
+          enum: ["up", "down"]
+        oper_state:
+          type: "string"
+          enum: ["up", "down"]
+        ip_address:
+          type: "string"
+        mtu:
+          type: "integer"
+    examples:
+      - input: "GigabitEthernet0/0/0 is up, line protocol is up\n  Hardware is CSR vNIC, address is 5254.0012.3456\n  Internet address is 192.168.1.1/24\n  MTU 1500 bytes"
+        output:
+          interface: "GigabitEthernet0/0/0"
+          admin_state: "up"
+          oper_state: "up"
+          ip_address: "192.168.1.1/24"
+          mtu: 1500
+
+  - name: "config_generation"
+    description: "Generate network device configuration from parameters"
+    instruction: "Generate a valid network device configuration based on the following parameters. Return only the configuration commands."
+    system_message: "You are an expert network configuration generator. Produce syntactically correct and secure configurations following industry best practices."
+    output_format: "text"
+    examples:
+      - input:
+          device_type: "cisco_ios"
+          hostname: "router-01"
+          interfaces:
+            - name: "GigabitEthernet0/0"
+              ip: "10.0.1.1"
+              mask: "255.255.255.0"
+        output: |
+          hostname router-01
+          !
+          interface GigabitEthernet0/0
+           ip address 10.0.1.1 255.255.255.0
+           no shutdown
+          !
+
+  - name: "troubleshooting"
+    description: "Diagnose network issues and suggest solutions"
+    instruction: "Analyze the following network symptoms and provide a structured diagnosis with recommended actions."
+    system_message: "You are an expert network troubleshooter. Provide systematic, evidence-based diagnosis and actionable solutions."
+    output_schema:
+      type: "object"
+      required: ["diagnosis", "probable_cause", "recommended_actions"]
+      properties:
+        diagnosis:
+          type: "string"
+        probable_cause:
+          type: "string"
+        severity:
+          type: "string"
+          enum: ["critical", "high", "medium", "low"]
+        recommended_actions:
+          type: "array"
+          items:
+            type: "string"
+    examples:
+      - input: "Interface GigabitEthernet0/1 shows up/down status. Physical layer is active but protocol is down. No IP connectivity."
+        output:
+          diagnosis: "Layer 2 protocol mismatch or encapsulation issue"
+          probable_cause: "Possible encapsulation mismatch, keepalive failure, or protocol negotiation problem"
+          severity: "high"
+          recommended_actions:
+            - "Verify encapsulation type matches on both ends"
+            - "Check for keepalive settings and adjust if necessary"
+            - "Review interface configuration for protocol mismatches"
+            - "Examine logs for protocol-specific errors"
+
+  - name: "yang_conversion"
+    description: "Convert CLI configuration to YANG data model"
+    instruction: "Convert the following CLI configuration into the corresponding YANG/JSON data model representation."
+    system_message: "You are an expert in YANG data models and network configuration translation. Produce valid YANG-compliant JSON."
+    output_format: "json"
+    examples:
+      - input: |
+          interface GigabitEthernet0/0/0
+           description WAN Interface
+           ip address 203.0.113.1 255.255.255.252
+           no shutdown
+        output:
+          ietf-interfaces:interfaces:
+            interface:
+              - name: "GigabitEthernet0/0/0"
+                description: "WAN Interface"
+                type: "iana-if-type:ethernetCsmacd"
+                enabled: true
+                ietf-ip:ipv4:
+                  address:
+                    - ip: "203.0.113.1"
+                      netmask: "255.255.255.252"
+
+# Generation Parameters
+generation:
+  temperature: 0.3  # Low temperature for consistent, deterministic outputs
+  max_tokens: 2000
+  top_p: 0.9
+  frequency_penalty: 0.0
+  presence_penalty: 0.0
+
+# Dataset Settings
+dataset:
+  train_split: 0.9
+  validation_split: 0.1
+  min_examples_per_task: 1000
+  max_examples_per_task: 10000
+  shuffle: true
+  seed: 42
