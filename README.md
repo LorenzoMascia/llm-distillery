@@ -63,7 +63,7 @@ code/
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/LorenzoMascia/llm-distillery.git
+git clone https://github.cloud/LorenzoMascia/llm-distillery.git
 cd llm-distillery
 ```
 
