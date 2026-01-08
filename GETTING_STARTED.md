@@ -1,13 +1,30 @@
-# Getting Started Guide
+# Getting Started Guide - Data Anonymization
 
-Welcome to LLM Distillery! This guide will help you get up and running quickly.
+Welcome to LLM Distillery! This guide will help you get up and running quickly with the data anonymization use case.
+
+## What You'll Build
+
+A specialized 1B parameter model that anonymizes Personally Identifiable Information (PII) in text and returns structured JSON output.
+
+**Input**: "My name is Mario Rossi, email: mario.rossi@gmail.com"
+**Output**:
+```json
+{
+  "anonymized_text": "My name is [NAME_1], email: [EMAIL_1]",
+  "replaced_tokens": [
+    {"replaced_value": "[NAME_1]", "original_value": "Mario Rossi"},
+    {"replaced_value": "[EMAIL_1]", "original_value": "mario.rossi@gmail.com"}
+  ]
+}
+```
 
 ## Prerequisites
 
 - Python 3.8 or higher
-- CUDA-capable GPU (8-12GB VRAM recommended for training)
-- OpenAI API key
+- GPU with 8GB+ VRAM (for training) - RTX 3060/4060 or better
+- OpenAI API key (for generating training data)
 - Git
+- 10GB free disk space
 
 ## Installation Steps
 
@@ -34,187 +51,268 @@ venv\Scripts\activate
 ### 3. Install Dependencies
 
 ```bash
-# Install the package and dependencies
-pip install -e .
+# Install all required packages
+pip install -r requirements.txt
 
-# Or use make (if available)
-make install
+# Or use the setup script
+pip install -e .
 ```
 
-### 4. Configure Environment
+### 4. Configure OpenAI API Key
 
 ```bash
 # Copy the example environment file
 cp .env.example .env
 
 # Edit .env and add your OpenAI API key
-# OPENAI_API_KEY=sk-your-api-key-here
+# Open .env in your editor and replace:
+# OPENAI_API_KEY=your_openai_api_key_here
+# with your actual key:
+# OPENAI_API_KEY=sk-your-actual-key-here
 ```
 
-### 5. Setup Project Structure
+### 5. Verify Installation
 
 ```bash
-# Create necessary directories
-make setup
+# Test that imports work
+python -c "import torch; import transformers; import peft; print('All dependencies installed!')"
 ```
 
-## Quick Start
+## Quick Start (Recommended)
 
-### Option 1: Run Complete Pipeline (Recommended for First Time)
+### One-Command Pipeline
+
+Run the entire workflow with a single command:
 
 ```bash
-python scripts/quick_start.py
+python scripts/quick_start_anonymization.py --num-samples 5000
+```
+
+Or using Make:
+
+```bash
+make anonymization-all
 ```
 
 This will:
-1. Validate your OpenAI API key
-2. Generate a small synthetic dataset (100 examples)
-3. Train a student model with LoRA
-4. Test inference
+1. ✅ Verify prerequisites and API key
+2. 📊 Generate 5,000 training examples using GPT-4
+3. 🎓 Train TinyLlama 1.1B with LoRA
+4. 🧪 Test the model with examples
 
-**Note**: This is a minimal run for demonstration. For production, use larger datasets.
+**Estimated time**: 3-5 hours total
+- Dataset generation: 2-3 hours
+- Training: 1-2 hours
 
-### Option 2: Step-by-Step Execution
+**Estimated cost**: $50-100 in OpenAI API credits
 
-#### Step 1: Generate Synthetic Dataset
+### Fast Test Mode (Recommended for First Try)
+
+Test the pipeline with a small dataset:
 
 ```bash
-python -m src.data_generation.dataset_generator \
-    --config config/prompts.yaml \
-    --output data/processed/training_data.jsonl \
-    --num-samples 10000
+python scripts/quick_start_anonymization.py --num-samples 100 --fast-test
+```
+
+This creates a quick prototype in ~30 minutes.
+
+## Step-by-Step Workflow
+
+### Step 1: Generate Training Dataset
+
+Generate synthetic anonymization examples using GPT-4 as teacher:
+
+```bash
+python scripts/generate_anonymization_dataset.py \
+    --config config/prompts_anonymization.yaml \
+    --output data/processed/anonymization_training_data.jsonl \
+    --num-samples 5000 \
+    --model gpt-4-turbo-preview
+```
+
+**Or using Make:**
+```bash
+make anonymization-generate
 ```
 
 **Parameters**:
-- `--config`: Path to prompts configuration
-- `--output`: Where to save the dataset
-- `--num-samples`: Number of examples per task
-- `--tasks`: (Optional) Specific tasks to generate
+- `--config`: Prompt configuration file (defines PII types and examples)
+- `--output`: Output path for training dataset
+- `--num-samples`: Number of examples to generate (5000-10000 recommended)
+- `--model`: OpenAI model to use as teacher
+- `--verbose`: Enable detailed logging
+
+**What happens**:
+- GPT-4 generates diverse text examples containing PII
+- Each example includes the anonymized version and token mappings
+- Progress is saved (you can stop and resume)
 
 **Expected output**:
-- `data/processed/training_data.jsonl`: Training dataset
-- `data/processed/failed_examples.json`: Failed generations (for debugging)
+- `data/processed/anonymization_training_data.jsonl`: Training dataset in JSONL format
+- Each line contains a formatted prompt with input and expected JSON output
 
-#### Step 2: Train Model with LoRA
+**Tips**:
+- Start with 100 samples for testing (`--num-samples 100`)
+- For production, use 5,000-10,000 samples
+- Generation speed: ~10-20 examples per minute
+
+### Step 2: Train the Model
+
+Fine-tune TinyLlama 1.1B on the generated dataset:
 
 ```bash
-python -m src.training.lora_trainer \
-    --config config/training_config.yaml \
-    --dataset data/processed/training_data.jsonl \
-    --output-dir models/student_model
+python scripts/train_anonymization_model.py \
+    --dataset data/processed/anonymization_training_data.jsonl \
+    --config config/training_config_1b_anonymization.yaml \
+    --output-dir models/anonymization_1b
+```
+
+**Or using Make:**
+```bash
+make anonymization-train
 ```
 
 **Parameters**:
+- `--dataset`: Path to training dataset (JSONL)
 - `--config`: Training configuration file
-- `--dataset`: Path to training dataset
-- `--output-dir`: Where to save the trained model
+- `--output-dir`: Directory to save model checkpoints
+- `--resume-from-checkpoint`: Resume from a checkpoint (optional)
+- `--verbose`: Enable detailed logging
+
+**What happens**:
+- Downloads TinyLlama 1.1B base model (~2.5GB)
+- Trains LoRA adapters on the anonymization task
+- Saves checkpoints every 50 steps
+- Evaluates on validation set
 
 **Expected output**:
-- `models/student_model/`: Trained LoRA adapter and tokenizer
-- Training logs in `logs/` directory
+- `models/anonymization_1b/`: Trained model directory
+  - `adapter_model.bin`: LoRA adapters
+  - `adapter_config.json`: LoRA configuration
+  - `tokenizer/`: Tokenizer files
+- `logs/anonymization_1b/`: Training logs
+- `runs/anonymization_1b/`: TensorBoard logs
 
-**Training time**: 2-4 hours on RTX 3090 (depends on dataset size)
+**Training time**:
+- 100 samples: ~5 minutes
+- 5,000 samples: ~1-2 hours (RTX 3090)
+- 10,000 samples: ~3-4 hours
 
-#### Step 3: Run Inference
+**Hardware requirements**:
+- GPU: 8GB+ VRAM
+- RAM: 16GB system memory
+- Storage: 10GB free space
+
+### Step 3: Test the Model
+
+Test your trained model:
+
+#### 3a. Test with Predefined Examples
 
 ```bash
-# Interactive mode
-python -m src.training.inference \
-    --model-path models/student_model \
-    --interactive
+python scripts/test_anonymization.py \
+    --model-path models/anonymization_1b \
+    --base-model TinyLlama/TinyLlama-1.1B-Chat-v1.0
+```
 
-# Single query
-python -m src.training.inference \
-    --model-path models/student_model \
-    --input "Your input text here"
+**Or using Make:**
+```bash
+make anonymization-test
+```
+
+#### 3b. Interactive Mode
+
+```bash
+python scripts/test_anonymization.py \
+    --model-path models/anonymization_1b \
+    --base-model TinyLlama/TinyLlama-1.1B-Chat-v1.0 \
+    --interactive
+```
+
+**Or using Make:**
+```bash
+make anonymization-interactive
+```
+
+Enter text interactively and see instant anonymization results.
+
+#### 3c. Test with File
+
+```bash
+python scripts/test_anonymization.py \
+    --model-path models/anonymization_1b \
+    --base-model TinyLlama/TinyLlama-1.1B-Chat-v1.0 \
+    --file data/examples/test_input.txt
+```
+
+#### 3d. Test Single Text
+
+```bash
+python scripts/test_anonymization.py \
+    --model-path models/anonymization_1b \
+    --base-model TinyLlama/TinyLlama-1.1B-Chat-v1.0 \
+    --text "Mario Rossi lives in Via Roma 1, Milano. Email: m.rossi@example.com"
 ```
 
 ## Configuration
 
-### Customize Prompts (`config/prompts.yaml`)
+### Customize PII Types (`config/prompts_anonymization.yaml`)
 
-Add new tasks or modify existing ones:
+Add or modify PII types to detect:
 
 ```yaml
 tasks:
-  - name: "your_custom_task"
-    description: "Description of the task"
-    instruction: "Instruction for the model"
-    system_message: "System message (optional)"
-    output_schema:  # Optional JSON schema
-      type: "object"
-      required: ["field1", "field2"]
-      properties:
-        field1:
-          type: "string"
+  - name: "data_anonymization"
+    examples:
+      - input: "Your custom input with PII"
+        output:
+          anonymized_text: "Your [PLACEHOLDER] text"
+          replaced_tokens:
+            - replaced_value: "[PLACEHOLDER]"
+              original_value: "original value"
 ```
 
-### Customize Training (`config/training_config.yaml`)
-
-Adjust training parameters:
+### Adjust Training Parameters (`config/training_config_1b_anonymization.yaml`)
 
 ```yaml
 model:
-  base_model: "mistralai/Mistral-7B-v0.1"  # Change base model
+  base_model: "TinyLlama/TinyLlama-1.1B-Chat-v1.0"  # Or try other 1B models
 
 lora:
-  r: 16                # LoRA rank (higher = more parameters)
-  lora_alpha: 32       # LoRA scaling factor
+  r: 8                     # LoRA rank (higher = more parameters, better quality)
+  lora_alpha: 16           # LoRA scaling
 
 training:
-  num_train_epochs: 3  # Number of training epochs
-  learning_rate: 2.0e-4  # Learning rate
-```
-
-## Common Use Cases
-
-### 1. Generate Dataset Only
-
-```bash
-python -m src.data_generation.dataset_generator \
-    --config config/prompts.yaml \
-    --output data/processed/my_dataset.jsonl \
-    --num-samples 5000 \
-    --tasks cli_parsing config_generation
-```
-
-### 2. Train on Custom Dataset
-
-```bash
-python -m src.training.lora_trainer \
-    --config config/training_config.yaml \
-    --dataset path/to/your/dataset.jsonl \
-    --output-dir models/custom_model
-```
-
-### 3. Evaluate Trained Model
-
-```bash
-python scripts/evaluate_model.py \
-    --model-path models/student_model \
-    --test-data data/processed/test_data.jsonl \
-    --output evaluation_results.json
+  num_train_epochs: 5      # More epochs = better training
+  per_device_train_batch_size: 8  # Adjust based on GPU memory
+  learning_rate: 3.0e-4    # Learning rate
 ```
 
 ## Monitoring Training
 
-### Using TensorBoard
+### TensorBoard
+
+View training progress in real-time:
 
 ```bash
-# Training logs are saved to ./runs by default
-tensorboard --logdir=./runs
+# Start TensorBoard
+tensorboard --logdir=runs/anonymization_1b
+
+# Open browser to http://localhost:6006
 ```
 
-### Using Weights & Biases (Optional)
+### Weights & Biases (Optional)
 
-1. Enable in `config/training_config.yaml`:
+Enable W&B in `config/training_config_1b_anonymization.yaml`:
+
 ```yaml
 monitoring:
   use_wandb: true
-  wandb_project: "my-project"
+  wandb_project: "anonymization-1b"
 ```
 
-2. Login to W&B:
+Then login:
+
 ```bash
 wandb login
 ```
@@ -223,54 +321,109 @@ wandb login
 
 ### OpenAI API Rate Limits
 
-If you hit rate limits:
-- Reduce batch size in dataset generation
-- Add delays between requests
+**Symptom**: "Rate limit exceeded" errors during dataset generation
+
+**Solutions**:
 - Use a higher tier API key
+- Reduce `--num-samples` and run multiple times
+- Add delays between requests (modify `generate_anonymization_dataset.py`)
 
 ### CUDA Out of Memory
 
-If training fails with OOM:
-- Reduce `per_device_train_batch_size` in training config
-- Enable gradient checkpointing (already enabled by default)
-- Use smaller model (e.g., 7B instead of 13B)
-- Ensure 4-bit quantization is enabled
+**Symptom**: "CUDA out of memory" during training
 
-### Low Quality Outputs
+**Solutions**:
+```yaml
+# In config/training_config_1b_anonymization.yaml:
+training:
+  per_device_train_batch_size: 4  # Reduce from 8
+  gradient_accumulation_steps: 4   # Increase from 2
+```
 
-If the model generates poor results:
-- Increase dataset size (10,000+ examples recommended)
-- Improve prompt quality in `config/prompts.yaml`
-- Add more examples to each task
-- Increase LoRA rank (16 → 32)
+### Model Not Generating Valid JSON
+
+**Symptom**: Model outputs invalid JSON or doesn't follow format
+
+**Solutions**:
+- Increase training samples (5,000 → 10,000)
+- Train for more epochs (5 → 8)
+- Check that training completed without errors
+- Verify examples in `prompts_anonymization.yaml` are correct
+
+### Low PII Detection Accuracy
+
+**Symptom**: Model misses some PII or makes incorrect replacements
+
+**Solutions**:
+- Add more diverse examples to `prompts_anonymization.yaml`
+- Increase dataset size (10,000+ examples)
 - Train for more epochs
+- Fine-tune temperature during inference (default: 0.1)
 
 ### Import Errors
 
-If you see import errors:
+**Symptom**: "ModuleNotFoundError" when running scripts
+
+**Solutions**:
 ```bash
 # Reinstall in development mode
 pip install -e .
+
+# Or add project to PYTHONPATH
+export PYTHONPATH="${PYTHONPATH}:$(pwd)"  # Linux/Mac
+set PYTHONPATH=%PYTHONPATH%;%cd%  # Windows
 ```
 
 ## Next Steps
 
-1. **Customize for Your Domain**: Modify `config/prompts.yaml` with your domain-specific tasks
-2. **Generate Larger Dataset**: Aim for 10,000-50,000 examples for production
-3. **Experiment with Models**: Try different base models (LLaMA, Qwen, etc.)
-4. **Fine-tune Hyperparameters**: Adjust LoRA rank, learning rate, etc.
-5. **Evaluate Performance**: Use `scripts/evaluate_model.py` to measure quality
+### 1. Test on Your Data
+
+```bash
+python scripts/test_anonymization.py \
+    --model-path models/anonymization_1b \
+    --file your_data.txt
+```
+
+### 2. Integrate into Your Application
+
+See [README_ANONYMIZATION.md](README_ANONYMIZATION.md) for Python integration examples.
+
+### 3. Fine-Tune for Your Domain
+
+- Add domain-specific PII types in `prompts_anonymization.yaml`
+- Generate more training data focused on your domain
+- Retrain the model
+
+### 4. Deploy to Production
+
+See production integration examples in [README_ANONYMIZATION.md](README_ANONYMIZATION.md):
+- Python API integration
+- FastAPI REST endpoint
+- Batch processing
 
 ## Resources
 
-- **Documentation**: See [README.md](README.md) and [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md)
-- **Examples**: Check `config/prompts.yaml` for task examples
-- **Article**: Read the full guide at [HOWAI](https://howai.com/fine-tuning-knowledge-distillation-llm.html)
+- **[README.md](README.md)** - Main project overview
+- **[README_ANONYMIZATION.md](README_ANONYMIZATION.md)** - Detailed anonymization guide
+- **[PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md)** - Project structure details
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contribution guidelines
+- **[HOWAI Article](https://www.howai.cloud/fine-tuning-knowledge-distillation-llm.html)** - Knowledge distillation approach
+
+## Available Commands
+
+```bash
+make help                        # Show all commands
+make anonymization-generate      # Generate dataset
+make anonymization-train         # Train model
+make anonymization-test          # Test with examples
+make anonymization-interactive   # Interactive mode
+make anonymization-all          # Complete pipeline
+```
 
 ## Getting Help
 
-- Check existing [Issues](https://github.com/LorenzoMascia/llm-distillery/issues)
-- Read [CONTRIBUTING.md](CONTRIBUTING.md)
-- Open a new issue with detailed information
+- 📖 Check [README_ANONYMIZATION.md](README_ANONYMIZATION.md) for detailed documentation
+- 🐛 Report issues on [GitHub Issues](https://github.com/LorenzoMascia/llm-distillery/issues)
+- 💬 Ask questions in [GitHub Discussions](https://github.com/LorenzoMascia/llm-distillery/discussions)
 
-Happy distilling! 🚀
+Happy anonymizing! 🔒🚀

@@ -1,0 +1,116 @@
+# Prompt Configuration for Data Anonymization
+# Domain: PII (Personally Identifiable Information) Anonymization
+
+tasks:
+  - name: "data_anonymization"
+    description: "Anonymize personally identifiable information (PII) in text and return structured JSON with replaced tokens"
+    instruction: "Analyze the following text and anonymize all personally identifiable information (PII). Return a JSON object with the anonymized text and all replaced tokens."
+    system_message: "You are an expert data privacy assistant specializing in PII anonymization. You must identify and replace all sensitive information including names, emails, phone numbers, addresses, social security numbers, credit card numbers, dates of birth, and any other personally identifiable information. Always respond with valid JSON in the exact format specified."
+    output_schema:
+      type: "object"
+      required: ["anonymized_text", "replaced_tokens"]
+      properties:
+        anonymized_text:
+          type: "string"
+          description: "The text with all PII replaced by generic placeholders"
+        replaced_tokens:
+          type: "array"
+          description: "List of all replacements made"
+          items:
+            type: "object"
+            required: ["replaced_value", "original_value"]
+            properties:
+              replaced_value:
+                type: "string"
+                description: "The placeholder used in anonymized text"
+              original_value:
+                type: "string"
+                description: "The original sensitive value that was replaced"
+    examples:
+      - input: "My name is Mario Rossi and my email is mario.rossi@gmail.com. You can call me at +39 333 1234567."
+        output:
+          anonymized_text: "My name is [NAME_1] and my email is [EMAIL_1]. You can call me at [PHONE_1]."
+          replaced_tokens:
+            - replaced_value: "[NAME_1]"
+              original_value: "Mario Rossi"
+            - replaced_value: "[EMAIL_1]"
+              original_value: "mario.rossi@gmail.com"
+            - replaced_value: "[PHONE_1]"
+              original_value: "+39 333 1234567"
+
+      - input: "Il dottor Giovanni Bianchi, nato il 15/03/1980, risiede in Via Roma 42, 20100 Milano. Il suo codice fiscale è BNCGNN80C15F205X."
+        output:
+          anonymized_text: "Il dottor [NAME_1], nato il [DATE_1], risiede in [ADDRESS_1]. Il suo codice fiscale è [TAX_CODE_1]."
+          replaced_tokens:
+            - replaced_value: "[NAME_1]"
+              original_value: "Giovanni Bianchi"
+            - replaced_value: "[DATE_1]"
+              original_value: "15/03/1980"
+            - replaced_value: "[ADDRESS_1]"
+              original_value: "Via Roma 42, 20100 Milano"
+            - replaced_value: "[TAX_CODE_1]"
+              original_value: "BNCGNN80C15F205X"
+
+      - input: "Contact information: John Smith (john.smith@company.com), Office: +1-555-123-4567, Mobile: +1-555-987-6543. SSN: 123-45-6789. Credit Card: 4532-1234-5678-9010."
+        output:
+          anonymized_text: "Contact information: [NAME_1] ([EMAIL_1]), Office: [PHONE_1], Mobile: [PHONE_2]. SSN: [SSN_1]. Credit Card: [CREDIT_CARD_1]."
+          replaced_tokens:
+            - replaced_value: "[NAME_1]"
+              original_value: "John Smith"
+            - replaced_value: "[EMAIL_1]"
+              original_value: "john.smith@company.com"
+            - replaced_value: "[PHONE_1]"
+              original_value: "+1-555-123-4567"
+            - replaced_value: "[PHONE_2]"
+              original_value: "+1-555-987-6543"
+            - replaced_value: "[SSN_1]"
+              original_value: "123-45-6789"
+            - replaced_value: "[CREDIT_CARD_1]"
+              original_value: "4532-1234-5678-9010"
+
+      - input: "La signora Laura Verdi ha prenotato un appuntamento per il 22 gennaio 2025. Può essere contattata al numero 02-12345678 o all'indirizzo laura.verdi@example.it. Abita in Corso Italia 156, 10123 Torino."
+        output:
+          anonymized_text: "La signora [NAME_1] ha prenotato un appuntamento per il [DATE_1]. Può essere contattata al numero [PHONE_1] o all'indirizzo [EMAIL_1]. Abita in [ADDRESS_1]."
+          replaced_tokens:
+            - replaced_value: "[NAME_1]"
+              original_value: "Laura Verdi"
+            - replaced_value: "[DATE_1]"
+              original_value: "22 gennaio 2025"
+            - replaced_value: "[PHONE_1]"
+              original_value: "02-12345678"
+            - replaced_value: "[EMAIL_1]"
+              original_value: "laura.verdi@example.it"
+            - replaced_value: "[ADDRESS_1]"
+              original_value: "Corso Italia 156, 10123 Torino"
+
+      - input: "Patient record: Name: Anna Ferrari, DOB: 1990-07-12, Insurance ID: INS987654321. Prescribed medication for chronic condition. Emergency contact: Marco Ferrari (husband) at 348-7654321."
+        output:
+          anonymized_text: "Patient record: Name: [NAME_1], DOB: [DATE_1], Insurance ID: [INSURANCE_ID_1]. Prescribed medication for chronic condition. Emergency contact: [NAME_2] (husband) at [PHONE_1]."
+          replaced_tokens:
+            - replaced_value: "[NAME_1]"
+              original_value: "Anna Ferrari"
+            - replaced_value: "[DATE_1]"
+              original_value: "1990-07-12"
+            - replaced_value: "[INSURANCE_ID_1]"
+              original_value: "INS987654321"
+            - replaced_value: "[NAME_2]"
+              original_value: "Marco Ferrari"
+            - replaced_value: "[PHONE_1]"
+              original_value: "348-7654321"
+
+# Generation Parameters
+generation:
+  temperature: 0.1  # Very low temperature for consistent, deterministic anonymization
+  max_tokens: 2048
+  top_p: 0.9
+  frequency_penalty: 0.0
+  presence_penalty: 0.0
+
+# Dataset Settings
+dataset:
+  train_split: 0.9
+  validation_split: 0.1
+  min_examples_per_task: 5000
+  max_examples_per_task: 20000
+  shuffle: true
+  seed: 42

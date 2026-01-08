@@ -1,6 +1,6 @@
-# Contributing to LLM Distillery
+# Contributing to LLM Distillery - Data Anonymization
 
-Thank you for your interest in contributing! This document provides guidelines for contributing to the project.
+Thank you for your interest in contributing! This document provides guidelines for contributing to the LLM Distillery data anonymization project.
 
 ## Getting Started
 
@@ -37,9 +37,52 @@ Thank you for your interest in contributing! This document provides guidelines f
 
 ## Documentation
 
-- Update README.md if adding new features
+- Update [README.md](README.md) if adding new features
+- Update [README_ANONYMIZATION.md](README_ANONYMIZATION.md) for anonymization-specific changes
 - Add docstrings to all functions and classes (Google style)
 - Update configuration examples if changing config structure
+- Update [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) if modifying the project structure
+
+## Contributing to Anonymization Features
+
+### Adding New PII Types
+
+To add support for new types of PII:
+
+1. Add examples to `config/prompts_anonymization.yaml`:
+   ```yaml
+   examples:
+     - input: "Text with new PII type..."
+       output:
+         anonymized_text: "Text with [NEW_TYPE_1]..."
+         replaced_tokens:
+           - replaced_value: "[NEW_TYPE_1]"
+             original_value: "original value"
+   ```
+
+2. Generate new training data with the updated prompts
+3. Test the model's ability to recognize the new PII type
+4. Document the new PII type in README_ANONYMIZATION.md
+
+### Improving Model Performance
+
+To improve anonymization accuracy:
+
+1. Add more diverse training examples
+2. Experiment with different prompt formulations
+3. Adjust LoRA hyperparameters
+4. Test with different base models
+5. Document your findings and improvements
+
+### Adding Support for Other Languages
+
+To add support for additional languages:
+
+1. Add language-specific examples in `config/prompts_anonymization.yaml`
+2. Ensure proper tokenization for the target language
+3. Generate training data in the new language
+4. Test and validate performance
+5. Update documentation with language support details
 
 ## Pull Request Guidelines
 

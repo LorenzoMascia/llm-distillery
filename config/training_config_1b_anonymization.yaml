@@ -1,0 +1,133 @@
+# LoRA/QLoRA Training Configuration for 1B Parameter Model
+# Optimized for Data Anonymization Task
+
+model:
+  # Base model: TinyLlama 1.1B - efficient and performant 1B model
+  base_model: "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
+
+  # Alternative 1B models to consider:
+  # base_model: "microsoft/phi-2"  # 2.7B but very efficient
+  # base_model: "Qwen/Qwen-1_8B"   # 1.8B with good performance
+  # base_model: "stabilityai/stablelm-2-1_6b"  # 1.6B stable model
+
+  # Model loading configuration
+  torch_dtype: "float16"
+  device_map: "auto"
+  trust_remote_code: false
+
+# Quantization (QLoRA) - can be disabled for 1B models if you have enough VRAM
+quantization:
+  enabled: false  # 1B models can often run without quantization
+  load_in_4bit: false
+  bnb_4bit_compute_dtype: "float16"
+  bnb_4bit_quant_type: "nf4"
+  bnb_4bit_use_double_quant: true
+
+# LoRA Configuration - adjusted for smaller model
+lora:
+  r: 8                     # Reduced LoRA rank for 1B model
+  lora_alpha: 16           # LoRA alpha parameter
+  target_modules:
+    - "q_proj"
+    - "v_proj"
+    - "k_proj"
+    - "o_proj"
+    - "gate_proj"
+    - "up_proj"
+    - "down_proj"
+  lora_dropout: 0.05
+  bias: "none"
+  task_type: "CAUSAL_LM"
+
+# Training Arguments - optimized for 1B model
+training:
+  output_dir: "./models/anonymization_1b"
+  num_train_epochs: 5  # More epochs for smaller model
+  per_device_train_batch_size: 8  # Larger batch size for smaller model
+  per_device_eval_batch_size: 8
+  gradient_accumulation_steps: 2  # Less accumulation needed
+  gradient_checkpointing: false  # Not needed for 1B model
+
+  # Optimizer
+  optim: "adamw_torch"  # Standard AdamW for non-quantized
+  learning_rate: 3.0e-4  # Slightly higher LR for smaller model
+  weight_decay: 0.01
+  adam_beta1: 0.9
+  adam_beta2: 0.999
+  adam_epsilon: 1.0e-8
+  max_grad_norm: 1.0
+
+  # Learning Rate Scheduler
+  lr_scheduler_type: "cosine"
+  warmup_ratio: 0.05
+  warmup_steps: 0
+
+  # Logging
+  logging_steps: 10
+  logging_first_step: true
+  logging_dir: "./logs/anonymization_1b"
+
+  # Evaluation
+  evaluation_strategy: "steps"
+  eval_steps: 50  # More frequent evaluation
+  save_strategy: "steps"
+  save_steps: 50
+  save_total_limit: 5
+  load_best_model_at_end: true
+  metric_for_best_model: "eval_loss"
+
+  # Performance
+  fp16: true  # Enable FP16 for faster training
+  bf16: false
+  tf32: true
+  dataloader_num_workers: 4
+  dataloader_pin_memory: true
+  group_by_length: true
+
+  # Reproducibility
+  seed: 42
+  data_seed: 42
+
+# Data Processing
+data:
+  max_seq_length: 1024  # Shorter sequences for anonymization task
+  dataset_text_field: "text"
+  packing: false
+
+  # Prompt template for anonymization task
+  prompt_template: |
+    ### Instruction:
+    Analyze the following text and anonymize all personally identifiable information (PII). Return a JSON object with the anonymized text and all replaced tokens.
+
+    ### Input:
+    {input}
+
+    ### Response:
+    {output}
+
+# Inference Configuration
+inference:
+  max_new_tokens: 1024
+  temperature: 0.1  # Low temperature for consistent anonymization
+  top_p: 0.95
+  top_k: 50
+  repetition_penalty: 1.05
+  do_sample: true
+  num_beams: 1
+
+# Monitoring (optional)
+monitoring:
+  use_wandb: false
+  wandb_project: "anonymization-1b-finetuning"
+  wandb_run_name: "tinyllama-1.1b-anonymization"
+  wandb_watch: "gradients"
+  wandb_log_model: false
+
+  use_tensorboard: true
+  tensorboard_log_dir: "./runs/anonymization_1b"
+
+# Hardware Optimization
+hardware:
+  cuda_visible_devices: "0"
+  max_memory_mb: 8000  # 1B model needs less memory
+  cpu_offload: false

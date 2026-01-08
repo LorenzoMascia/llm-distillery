@@ -1,6 +1,6 @@
 # Makefile for LLM Knowledge Distillation Pipeline
 
-.PHONY: help install install-dev setup clean test lint format train generate infer
+.PHONY: help install install-dev setup clean test lint format train generate infer anonymization-all
 
 help:
 	@echo "Available commands:"
@@ -14,6 +14,13 @@ help:
 	@echo "  make generate     - Generate synthetic dataset"
 	@echo "  make train        - Train model with LoRA"
 	@echo "  make infer        - Run inference"
+	@echo ""
+	@echo "Anonymization Project:"
+	@echo "  make anonymization-generate     - Generate anonymization dataset"
+	@echo "  make anonymization-train        - Train anonymization model (1B)"
+	@echo "  make anonymization-test         - Test anonymization model"
+	@echo "  make anonymization-interactive  - Interactive anonymization mode"
+	@echo "  make anonymization-all          - Full anonymization pipeline"
 
 install:
 	pip install -e .
@@ -72,3 +79,31 @@ infer:
 # Quick start - full pipeline
 quickstart: setup install generate train
 	@echo "Pipeline complete! Model saved in models/student_model"
+
+# Anonymization Project Commands
+anonymization-generate:
+	python scripts/generate_anonymization_dataset.py \
+		--config config/prompts_anonymization.yaml \
+		--output data/processed/anonymization_training_data.jsonl \
+		--num-samples 5000 \
+		--model gpt-4-turbo-preview
+
+anonymization-train:
+	python scripts/train_anonymization_model.py \
+		--dataset data/processed/anonymization_training_data.jsonl \
+		--config config/training_config_1b_anonymization.yaml \
+		--output-dir models/anonymization_1b
+
+anonymization-test:
+	python scripts/test_anonymization.py \
+		--model-path models/anonymization_1b \
+		--base-model TinyLlama/TinyLlama-1.1B-Chat-v1.0
+
+anonymization-interactive:
+	python scripts/test_anonymization.py \
+		--model-path models/anonymization_1b \
+		--base-model TinyLlama/TinyLlama-1.1B-Chat-v1.0 \
+		--interactive
+
+anonymization-all:
+	python scripts/quick_start_anonymization.py --num-samples 5000

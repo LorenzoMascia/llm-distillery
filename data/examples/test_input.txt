@@ -1,0 +1,24 @@
+Egregio Sig. Alessandro Moretti,
+
+La informiamo che la sua richiesta di mutuo ipotecario è stata approvata.
+
+Dati del richiedente:
+- Nome completo: Alessandro Moretti
+- Data di nascita: 23/05/1985
+- Codice Fiscale: MRTLSN85E23H501K
+- Indirizzo: Via Giuseppe Verdi 142, 40100 Bologna
+- Email: alessandro.moretti@example.com
+- Telefono: +39 051 234567
+- Cellulare: 349-8765432
+
+Dettagli del mutuo:
+- Importo finanziato: €250.000
+- IBAN per addebito rata: IT75K0123456789012345678901
+- Numero pratica: MUTUO-2025-00789
+
+Documenti richiesti entro il 31 gennaio 2025.
+
+Per informazioni contatti il suo consulente, Dott.ssa Maria Bianchi, al numero 051-345678 o via email m.bianchi@banca.it
+
+Cordiali saluti,
+Servizio Mutui
