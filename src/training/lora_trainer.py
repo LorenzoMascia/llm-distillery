@@ -203,7 +203,7 @@ class LoRATrainer:
             warmup_ratio=training_config.get("warmup_ratio", 0.03),
             logging_steps=training_config["logging_steps"],
             logging_dir=training_config.get("logging_dir", "./logs"),
-            evaluation_strategy=training_config["evaluation_strategy"],
+            eval_strategy=training_config.get("evaluation_strategy", "steps"),  # Changed from evaluation_strategy
             eval_steps=training_config.get("eval_steps", 100),
             save_strategy=training_config["save_strategy"],
             save_steps=training_config["save_steps"],

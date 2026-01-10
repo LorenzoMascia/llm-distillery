@@ -79,7 +79,7 @@ training:
   # Performance
   fp16: true  # Enable FP16 for faster training
   bf16: false
-  tf32: true
+  tf32: false  # Disabled - requires Ampere GPU or newer
   dataloader_num_workers: 4
   dataloader_pin_memory: true
   group_by_length: true

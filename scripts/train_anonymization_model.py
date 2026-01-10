@@ -69,19 +69,29 @@ def main():
 
     # Initialize trainer
     try:
-        trainer = LoRATrainer(
-            config_path=args.config,
-            dataset_path=args.dataset,
-            output_dir=args.output_dir
-        )
+        logger.info("Initializing LoRA trainer...")
+        trainer = LoRATrainer(config_path=args.config)
+
+        logger.info("Setting up model...")
+        trainer.setup_model()
+
+        logger.info(f"Preparing dataset from {args.dataset}...")
+        train_dataset, eval_dataset = trainer.prepare_dataset(args.dataset)
+
     except Exception as e:
         logger.error(f"Failed to initialize trainer: {e}")
+        import traceback
+        traceback.print_exc()
         sys.exit(1)
 
     # Train model
     try:
         logger.info("Starting training...")
-        trainer.train(resume_from_checkpoint=args.resume_from_checkpoint)
+        trainer.train(
+            train_dataset=train_dataset,
+            eval_dataset=eval_dataset,
+            output_dir=args.output_dir
+        )
         logger.info(f"Training completed! Model saved to: {args.output_dir}")
 
     except KeyboardInterrupt:
