@@ -95,10 +95,10 @@ make anonymization-all
 ```
 
 This will:
-1. ✅ Verify prerequisites and API key
-2. 📊 Generate 5,000 training examples using GPT-4
-3. 🎓 Train TinyLlama 1.1B with LoRA
-4. 🧪 Test the model with examples
+1.  Verify prerequisites and API key
+2.  Generate 5,000 training examples using GPT-4
+3.  Train TinyLlama 1.1B with LoRA
+4.  Test the model with examples
 
 **Estimated time**: 3-5 hours total
 - Dataset generation: 2-3 hours
@@ -422,8 +422,8 @@ make anonymization-all          # Complete pipeline
 
 ## Getting Help
 
-- 📖 Check [README_ANONYMIZATION.md](README_ANONYMIZATION.md) for detailed documentation
-- 🐛 Report issues on [GitHub Issues](https://github.com/LorenzoMascia/llm-distillery/issues)
-- 💬 Ask questions in [GitHub Discussions](https://github.com/LorenzoMascia/llm-distillery/discussions)
+- Check [README_ANONYMIZATION.md](README_ANONYMIZATION.md) for detailed documentation
+- Report issues on [GitHub Issues](https://github.com/LorenzoMascia/llm-distillery/issues)
+- Ask questions in [GitHub Discussions](https://github.com/LorenzoMascia/llm-distillery/discussions)
 
-Happy anonymizing! 🔒🚀
+Happy anonymizing! 
