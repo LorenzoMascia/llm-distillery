@@ -1,31 +1,26 @@
 # LoRA/QLoRA Training Configuration for 1B Parameter Model
-# Optimized for Data Anonymization Task
+# Optimized for Low VRAM GPUs (6GB)
 
 model:
   # Base model: TinyLlama 1.1B - efficient and performant 1B model
   base_model: "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
-
-  # Alternative 1B models to consider:
-  # base_model: "microsoft/phi-2"  # 2.7B but very efficient
-  # base_model: "Qwen/Qwen-1_8B"   # 1.8B with good performance
-  # base_model: "stabilityai/stablelm-2-1_6b"  # 1.6B stable model
 
   # Model loading configuration
   torch_dtype: "float16"
   device_map: "auto"
   trust_remote_code: false
 
-# Quantization (QLoRA) - can be disabled for 1B models if you have enough VRAM
+# Quantization (QLoRA) - REQUIRED for 6GB GPU
 quantization:
-  enabled: false  # 1B models can often run without quantization
-  load_in_4bit: false
+  enabled: true  # ENABLED for low VRAM
+  load_in_4bit: true
   bnb_4bit_compute_dtype: "float16"
   bnb_4bit_quant_type: "nf4"
   bnb_4bit_use_double_quant: true
 
 # LoRA Configuration - adjusted for smaller model
 lora:
-  r: 8                     # Reduced LoRA rank for 1B model
+  r: 8                     # LoRA rank
   lora_alpha: 16           # LoRA alpha parameter
   target_modules:
     - "q_proj"
@@ -39,18 +34,18 @@ lora:
   bias: "none"
   task_type: "CAUSAL_LM"
 
-# Training Arguments - optimized for 1B model
+# Training Arguments - optimized for 6GB VRAM
 training:
   output_dir: "./models/anonymization_1b"
-  num_train_epochs: 5  # More epochs for smaller model
-  per_device_train_batch_size: 8  # Larger batch size for smaller model
-  per_device_eval_batch_size: 8
-  gradient_accumulation_steps: 2  # Less accumulation needed
-  gradient_checkpointing: false  # Not needed for 1B model
+  num_train_epochs: 5
+  per_device_train_batch_size: 1  # REDUCED from 8 to 1 for 6GB GPU
+  per_device_eval_batch_size: 1   # REDUCED from 8 to 1
+  gradient_accumulation_steps: 16  # INCREASED from 2 to 16 (effective batch size = 16)
+  gradient_checkpointing: true  # ENABLED to save memory
 
   # Optimizer
-  optim: "adamw_torch"  # Standard AdamW for non-quantized
-  learning_rate: 3.0e-4  # Slightly higher LR for smaller model
+  optim: "paged_adamw_8bit"  # Memory-efficient optimizer for quantized models
+  learning_rate: 3.0e-4
   weight_decay: 0.01
   adam_beta1: 0.9
   adam_beta2: 0.999
@@ -69,19 +64,19 @@ training:
 
   # Evaluation
   evaluation_strategy: "steps"
-  eval_steps: 50  # More frequent evaluation
+  eval_steps: 100  # Less frequent to save time
   save_strategy: "steps"
-  save_steps: 50
-  save_total_limit: 5
+  save_steps: 100
+  save_total_limit: 3  # Keep fewer checkpoints to save disk space
   load_best_model_at_end: true
   metric_for_best_model: "eval_loss"
 
   # Performance
   fp16: true  # Enable FP16 for faster training
   bf16: false
-  tf32: false  # Disabled - requires Ampere GPU or newer
-  dataloader_num_workers: 4
-  dataloader_pin_memory: true
+  tf32: false  # Disabled - requires Ampere GPU
+  dataloader_num_workers: 0  # REDUCED to 0 to save memory
+  dataloader_pin_memory: false  # DISABLED to save memory
   group_by_length: true
 
   # Reproducibility
@@ -90,7 +85,7 @@ training:
 
 # Data Processing
 data:
-  max_seq_length: 1024  # Shorter sequences for anonymization task
+  max_seq_length: 512  # REDUCED from 1024 to 512 to save memory
   dataset_text_field: "text"
   packing: false
 
@@ -129,5 +124,5 @@ monitoring:
 # Hardware Optimization
 hardware:
   cuda_visible_devices: "0"
-  max_memory_mb: 8000  # 1B model needs less memory
+  max_memory_mb: 5500  # Reduced for 6GB GPU (leave some headroom)
   cpu_offload: false

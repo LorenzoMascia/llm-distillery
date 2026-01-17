@@ -67,3 +67,6 @@ htmlcov/
 tmp/
 temp/
 *.tmp
+
+huggingface
+huggingface/

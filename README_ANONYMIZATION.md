@@ -192,18 +192,18 @@ training:
 
 The model is trained to recognize and anonymize:
 
-- 👤 **Names** (individuals)
-- 📧 **Emails**
-- 📱 **Phone numbers** (various international formats)
-- 🏠 **Addresses** (complete with street, city, ZIP)
-- 📅 **Dates** (birth dates, appointments)
-- 🆔 **Tax IDs** (Italy: Codice Fiscale)
-- 💳 **Credit card numbers**
-- 🔢 **SSN** (Social Security Number - USA)
-- 🏦 **IBAN**
-- 📋 **VAT numbers** (Italy: P.IVA)
-- 🏥 **Patient ID / Insurance ID**
-- 👔 **Employee ID**
+- **Names** (individuals)
+- **Emails**
+- **Phone numbers** (various international formats)
+- **Addresses** (complete with street, city, ZIP)
+- **Dates** (birth dates, appointments)
+- **Tax IDs** (Italy: Codice Fiscale)
+- **Credit card numbers**
+- **SSN** (Social Security Number - USA)
+- **IBAN**
+- **VAT numbers** (Italy: P.IVA)
+- **Patient ID / Insurance ID**
+- **Employee ID**
 
 ## Troubleshooting
 

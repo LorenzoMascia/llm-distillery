@@ -27,14 +27,15 @@ def load_model(model_path: str, base_model: str = None):
     """
     print(f"Loading model from {model_path}...")
 
-    # Load tokenizer
-    tokenizer = AutoTokenizer.from_pretrained(model_path)
-    if tokenizer.pad_token is None:
-        tokenizer.pad_token = tokenizer.eos_token
-
     # Load base model and adapters
     if base_model:
         print(f"Loading base model: {base_model}")
+        # Load tokenizer from base model
+        tokenizer = AutoTokenizer.from_pretrained(base_model)
+        if tokenizer.pad_token is None:
+            tokenizer.pad_token = tokenizer.eos_token
+
+        # Load base model
         model = AutoModelForCausalLM.from_pretrained(
             base_model,
             torch_dtype=torch.float16,
@@ -46,6 +47,10 @@ def load_model(model_path: str, base_model: str = None):
     else:
         # Try to load directly (works if model is merged)
         try:
+            tokenizer = AutoTokenizer.from_pretrained(model_path)
+            if tokenizer.pad_token is None:
+                tokenizer.pad_token = tokenizer.eos_token
+
             model = AutoModelForCausalLM.from_pretrained(
                 model_path,
                 torch_dtype=torch.float16,
@@ -73,7 +78,7 @@ def create_prompt(text: str) -> str:
         Formatted prompt
     """
     prompt = f"""### Instruction:
-Analyze the following text and anonymize all personally identifiable information (PII). Return a JSON object with the anonymized text and all replaced tokens.
+Analyze the following text and anonymize all personally identifiable information (PII). Return a JSON object with the anonymized text and  only if, the aninymized text is different from the input text, all replaced tokens.
 
 ### Input:
 {text}
